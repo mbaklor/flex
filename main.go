@@ -37,7 +37,7 @@ func CreateDeviceFlags(flags ...cli.Flag) []cli.Flag {
 		},
 		&cli.StringFlag{
 			Name:     "device-file",
-			Aliases:  []string{"df"},
+			Aliases:  []string{"f"},
 			Usage:    "name of json file that contains device IP, username and password",
 			Category: "Device Info",
 		},
@@ -72,6 +72,11 @@ func flexConfig(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	if !ctx.Args().Present() {
+		return cli.Exit("Required config file in arguments", 1)
+	}
+	confFile := ctx.Args().First()
+	println(confFile)
 	println(dev.Address, dev.User, dev.Password)
 	return nil
 }
@@ -105,15 +110,8 @@ func main() {
 				Name:    "config",
 				Aliases: []string{"c"},
 				Usage:   "send config json to device",
-				Flags: CreateDeviceFlags(
-					&cli.StringFlag{
-						Name:     "file",
-						Aliases:  []string{"f"},
-						Usage:    "config file to send",
-						Required: true,
-					},
-				),
-				Action: flexConfig,
+				Flags:   CreateDeviceFlags(),
+				Action:  flexConfig,
 			},
 		},
 	}
