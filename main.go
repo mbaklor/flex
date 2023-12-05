@@ -14,6 +14,37 @@ func flexaInit(ctx *cli.Context) error {
 	return nil
 }
 
+func CreateDeviceFlags(flags ...cli.Flag) []cli.Flag {
+	deviceFlags := []cli.Flag{
+		&cli.StringFlag{
+			Name:     "address",
+			Aliases:  []string{"a", "addr"},
+			Usage:    "device IP address",
+			Category: "Device Info",
+		},
+		&cli.StringFlag{
+			Name:     "username",
+			Aliases:  []string{"u", "user"},
+			Usage:    "device username",
+			Category: "Device Info",
+			Value:    "admin",
+		},
+		&cli.StringFlag{
+			Name:     "password",
+			Aliases:  []string{"p", "pass"},
+			Usage:    "Device password in plain text (don't judge me)",
+			Category: "Device Info",
+		},
+		&cli.StringFlag{
+			Name:     "device-file",
+			Aliases:  []string{"df"},
+			Usage:    "name of json file that contains device IP, username and password",
+			Category: "Device Info",
+		},
+	}
+	return append(flags, deviceFlags...)
+}
+
 func CheckForDevice(ctx *cli.Context) (device.Device, error) {
 	devFile := ctx.String("device-file")
 	devIP := ctx.String("address")
@@ -46,33 +77,6 @@ func flexConfig(ctx *cli.Context) error {
 }
 
 func main() {
-	deviceFlags := []cli.Flag{
-		&cli.StringFlag{
-			Name:     "address",
-			Aliases:  []string{"a", "addr"},
-			Usage:    "device IP address",
-			Category: "Device Info",
-		},
-		&cli.StringFlag{
-			Name:     "username",
-			Aliases:  []string{"u", "user"},
-			Usage:    "device username",
-			Category: "Device Info",
-			Value:    "admin",
-		},
-		&cli.StringFlag{
-			Name:     "password",
-			Aliases:  []string{"p", "pass"},
-			Usage:    "Device password in plain text (don't judge me)",
-			Category: "Device Info",
-		},
-		&cli.StringFlag{
-			Name:     "device-file",
-			Aliases:  []string{"df"},
-			Usage:    "name of json file that contains device IP, username and password",
-			Category: "Device Info",
-		},
-	}
 
 	app := &cli.App{
 		Name:    "Flex",
@@ -101,14 +105,14 @@ func main() {
 				Name:    "config",
 				Aliases: []string{"c"},
 				Usage:   "send config json to device",
-				Flags: append([]cli.Flag{
+				Flags: CreateDeviceFlags(
 					&cli.StringFlag{
 						Name:     "file",
 						Aliases:  []string{"f"},
 						Usage:    "config file to send",
 						Required: true,
 					},
-				}, deviceFlags...),
+				),
 				Action: flexConfig,
 			},
 		},
