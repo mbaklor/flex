@@ -14,11 +14,11 @@ func flexaInit(ctx *cli.Context) error {
 	return nil
 }
 
-func flexConfig(ctx *cli.Context) error {
+func CheckForDevice(ctx *cli.Context) (device.Device, error) {
 	devFile := ctx.String("device-file")
 	devIP := ctx.String("address")
 	if devFile == "" && devIP == "" {
-		return cli.Exit("Required either device file or IP address", 1)
+		return device.Device{}, cli.Exit("Required either device file or IP address", 1)
 	}
 
 	var dev device.Device
@@ -26,12 +26,20 @@ func flexConfig(ctx *cli.Context) error {
 		var err error
 		dev, err = device.NewDeviceFromFile(devFile)
 		if err != nil {
-			return cli.Exit(err, 1)
+			return device.Device{}, cli.Exit(err, 1)
 		}
 	} else {
 		devUser := ctx.String("username")
 		devPass := ctx.String("password")
 		dev = device.NewDevice(devIP, devUser, devPass)
+	}
+	return dev, nil
+}
+
+func flexConfig(ctx *cli.Context) error {
+	dev, err := CheckForDevice(ctx)
+	if err != nil {
+		return err
 	}
 	println(dev.Address, dev.User, dev.Password)
 	return nil
