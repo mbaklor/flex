@@ -67,20 +67,6 @@ func CheckForDevice(ctx *cli.Context) (device.Device, error) {
 	return dev, nil
 }
 
-func flexConfig(ctx *cli.Context) error {
-	dev, err := CheckForDevice(ctx)
-	if err != nil {
-		return err
-	}
-	if !ctx.Args().Present() {
-		return cli.Exit("Required config file in arguments", 1)
-	}
-	confFile := ctx.Args().First()
-	println(confFile)
-	println(dev.Address, dev.User, dev.Password)
-	return nil
-}
-
 func main() {
 
 	app := &cli.App{
