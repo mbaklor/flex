@@ -9,9 +9,9 @@ import (
 )
 
 type Device struct {
-	Address  string
-	User     string
-	Password string
+	Address  string `json:"address"`
+	User     string `json:"username"`
+	Password string `json:"password"`
 }
 
 func NewDevice(address, user, pass string) Device {
@@ -21,12 +21,12 @@ func NewDevice(address, user, pass string) Device {
 	return Device{address, user, pass}
 }
 
-func NewDeviceListFromFile(filename string) ([]Device, error) {
+func NewDeviceFromFile(filename string) (Device, error) {
 	file, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		return Device{}, err
 	}
-	var devices []Device
+	var devices Device
 	err = json.Unmarshal(file, &devices)
 	return devices, err
 }
