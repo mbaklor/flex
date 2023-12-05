@@ -1,7 +1,9 @@
 package device
 
 import (
+	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/icholy/digest"
 )
@@ -17,6 +19,16 @@ func NewDevice(address, user, pass string) Device {
 		user = "admin"
 	}
 	return Device{address, user, pass}
+}
+
+func NewDeviceListFromFile(filename string) ([]Device, error) {
+	file, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	var devices []Device
+	err = json.Unmarshal(file, &devices)
+	return devices, err
 }
 
 func (d Device) SendToDevice(r *http.Request) (string, error) {
