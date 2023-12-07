@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
 
@@ -30,13 +31,13 @@ func flexConfig(ctx *cli.Context) error {
 	r, err := http.NewRequest("POST", fmt.Sprintf("http://%s/cgi-bin/Flexa_upload.cgi", dev.Address.String()), body)
 	r.Header.Add("Content-Type", contentType)
 
-	fmt.Printf("Sending %s to %s\n", confFile, dev.Address.String())
+	color.Green("Sending %s to %s\n", confFile, dev.Address.String())
 
 	res, err := dev.SendToDevice(r)
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
-	fmt.Printf("Successfully send to device! Got reply of %s", res)
+	color.Green("Successfully send to device! Got reply of %s", res)
 	return nil
 }
 
