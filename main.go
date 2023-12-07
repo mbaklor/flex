@@ -53,8 +53,8 @@ func CheckForDevice(ctx *cli.Context) (device.Device, error) {
 	}
 
 	var dev device.Device
+	var err error
 	if devFile != "" {
-		var err error
 		dev, err = device.NewDeviceFromFile(devFile)
 		if err != nil {
 			return device.Device{}, cli.Exit(err, 1)
@@ -62,7 +62,10 @@ func CheckForDevice(ctx *cli.Context) (device.Device, error) {
 	} else {
 		devUser := ctx.String("username")
 		devPass := ctx.String("password")
-		dev = device.NewDevice(devIP, devUser, devPass)
+		dev, err = device.NewDevice(devIP, devUser, devPass)
+		if err != nil {
+			return device.Device{}, cli.Exit(err, 1)
+		}
 	}
 	return dev, nil
 }
