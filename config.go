@@ -13,26 +13,26 @@ import (
 func flexConfig(ctx *cli.Context) error {
 	dev, err := CheckForDevice(ctx)
 	if err != nil {
-		return err
+		return ShowHelpAndError(ctx, err)
 	}
 	if !ctx.Args().Present() {
-		return cli.Exit("Required config file in arguments", 1)
+		return ShowHelpAndError(ctx, fmt.Errorf("Required config file in arguments"))
 	}
 	confFile := ctx.Args().First()
 	config, err := getConfigFile(confFile)
 	if err != nil {
-		return cli.Exit(err, 1)
+		return ShowHelpAndError(ctx, err)
 	}
 	body, contentType, err := CreateConfigForm(config)
 	if err != nil {
-		return cli.Exit(err, 1)
+		return ShowHelpAndError(ctx, err)
 	}
 	r, err := http.NewRequest("POST", fmt.Sprintf("http://%s/cgi-bin/Flexa_upload.cgi", dev.Address.String()), body)
 	r.Header.Add("Content-Type", contentType)
 
 	res, err := dev.SendToDevice(r)
 	if err != nil {
-		return cli.Exit(err, 1)
+		return ShowHelpAndError(ctx, err)
 	}
 	println(res)
 	println(dev.Address.String(), dev.User, dev.Password)

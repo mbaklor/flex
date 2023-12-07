@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -45,11 +46,16 @@ func CreateDeviceFlags(flags ...cli.Flag) []cli.Flag {
 	return append(flags, deviceFlags...)
 }
 
+func ShowHelpAndError(ctx *cli.Context, err error) error {
+	cli.ShowSubcommandHelp(ctx)
+	return cli.Exit(err, 1)
+}
+
 func CheckForDevice(ctx *cli.Context) (device.Device, error) {
 	devFile := ctx.String("device-file")
 	devIP := ctx.String("address")
 	if devFile == "" && devIP == "" {
-		return device.Device{}, cli.Exit("Required either device file or IP address", 1)
+		return device.Device{}, fmt.Errorf("Required either device file or IP address")
 	}
 
 	var dev device.Device
@@ -57,14 +63,14 @@ func CheckForDevice(ctx *cli.Context) (device.Device, error) {
 	if devFile != "" {
 		dev, err = device.NewDeviceFromFile(devFile)
 		if err != nil {
-			return device.Device{}, cli.Exit(err, 1)
+			return device.Device{}, err
 		}
 	} else {
 		devUser := ctx.String("username")
 		devPass := ctx.String("password")
 		dev, err = device.NewDevice(devIP, devUser, devPass)
 		if err != nil {
-			return device.Device{}, cli.Exit(err, 1)
+			return device.Device{}, err
 		}
 	}
 	return dev, nil
