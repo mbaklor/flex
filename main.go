@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 	"mbaklor/flex/device"
 )
@@ -51,6 +52,14 @@ func ShowHelpAndError(ctx *cli.Context, err error) error {
 	return cli.Exit(err, 1)
 }
 
+func ExitHandler(ctx *cli.Context, err error) {
+	e, is := err.(cli.ExitCoder)
+	if is {
+		color.Red(e.Error())
+		cli.OsExiter(e.ExitCode())
+	}
+}
+
 func CheckForDevice(ctx *cli.Context) (device.Device, error) {
 	devFile := ctx.String("device-file")
 	devIP := ctx.String("address")
@@ -79,9 +88,12 @@ func CheckForDevice(ctx *cli.Context) (device.Device, error) {
 func main() {
 
 	app := &cli.App{
-		Name:    "Flex",
-		Usage:   "CLI tool for Flexa development",
-		Version: "v0.0.1",
+		Name:            "Flex",
+		Usage:           "CLI tool for Flexa development",
+		Version:         "v0.0.1",
+		ArgsUsage:       " ",
+		ExitErrHandler:  ExitHandler,
+		HideHelpCommand: true,
 		Commands: []*cli.Command{
 			{
 				Name:    "init",
@@ -102,11 +114,12 @@ func main() {
 				Usage:   "pack and upload current package",
 			},
 			{
-				Name:    "config",
-				Aliases: []string{"c"},
-				Usage:   "send config json to device",
-				Flags:   CreateDeviceFlags(),
-				Action:  flexConfig,
+				Name:      "config",
+				Aliases:   []string{"c"},
+				Usage:     "send config json to device",
+				ArgsUsage: "config file [eg: config.json]",
+				Flags:     CreateDeviceFlags(),
+				Action:    flexConfig,
 			},
 		},
 	}
