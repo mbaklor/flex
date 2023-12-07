@@ -21,18 +21,18 @@ func flexConfig(ctx *cli.Context) error {
 	confFile := ctx.Args().First()
 	config, err := getConfigFile(confFile)
 	if err != nil {
-		return ShowHelpAndError(ctx, err)
+		return cli.Exit(err, 1)
 	}
 	body, contentType, err := CreateConfigForm(config)
 	if err != nil {
-		return ShowHelpAndError(ctx, err)
+		return cli.Exit(err, 1)
 	}
 	r, err := http.NewRequest("POST", fmt.Sprintf("http://%s/cgi-bin/Flexa_upload.cgi", dev.Address.String()), body)
 	r.Header.Add("Content-Type", contentType)
 
 	res, err := dev.SendToDevice(r)
 	if err != nil {
-		return ShowHelpAndError(ctx, err)
+		return cli.Exit(err, 1)
 	}
 	println(res)
 	println(dev.Address.String(), dev.User, dev.Password)
