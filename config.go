@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"mbaklor/flex/device"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -24,16 +23,19 @@ func flexConfig(ctx *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
-	r, err := CreateConfigForm(config, dev)
+	body, contentType, err := CreateConfigForm(config)
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
+	r, err := http.NewRequest("POST", fmt.Sprintf("http://%s/cgi-bin/Flexa_upload.cgi", dev.Address.String()), body)
+	r.Header.Add("Content-Type", contentType)
+
 	res, err := dev.SendToDevice(r)
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
 	println(res)
-	println(dev.Address, dev.User, dev.Password)
+	println(dev.Address.String(), dev.User, dev.Password)
 	return nil
 }
 
@@ -45,18 +47,18 @@ func getConfigFile(filename string) ([]byte, error) {
 	return file, nil
 }
 
-func CreateConfigForm(file []byte, dev device.Device) (*http.Request, error) {
+func CreateConfigForm(file []byte) (*bytes.Buffer, string, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
+	defer writer.Close()
 	part, err := writer.CreateFormFile("uploadfileconf", "config.json")
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	part.Write(file)
-	writer.Close()
+	_, err = part.Write(file)
+	if err != nil {
+		return nil, "", err
+	}
+	return body, writer.FormDataContentType(), nil
 
-	r, err := http.NewRequest("POST", fmt.Sprintf("http://%s/cgi-bin/Flexa_upload.cgi", dev.Address.String()), body)
-	r.Header.Add("Content-Type", writer.FormDataContentType())
-
-	return r, err
 }
