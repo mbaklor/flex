@@ -112,6 +112,8 @@ func main() {
 				Name:    "package",
 				Aliases: []string{"p"},
 				Usage:   "pack and upload current package",
+				Flags:   CreateDeviceFlags(),
+				Action:  flexPack,
 			},
 			{
 				Name:      "config",
