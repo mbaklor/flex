@@ -110,8 +110,15 @@ func main() {
 				Aliases:         []string{"p"},
 				Usage:           "pack and upload current package",
 				HideHelpCommand: true,
-				Flags:           CreateDeviceFlags(),
-				Action:          flexPack,
+				Flags: CreateDeviceFlags(
+					&cli.StringFlag{
+						Name:    "directory",
+						Aliases: []string{"d"},
+						Usage:   "directory to pack and send [default: .]",
+						Value:   ".",
+					},
+				),
+				Action: flexPack,
 			},
 			{
 				Name:            "config",
