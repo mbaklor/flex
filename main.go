@@ -19,29 +19,25 @@ func flexaInit(ctx *cli.Context) error {
 func CreateDeviceFlags(flags ...cli.Flag) []cli.Flag {
 	deviceFlags := []cli.Flag{
 		&cli.StringFlag{
-			Name:     "address",
-			Aliases:  []string{"a", "addr"},
-			Usage:    "device IP address",
-			Category: "Device Info",
+			Name:    "address",
+			Aliases: []string{"a", "addr"},
+			Usage:   "device IP address",
 		},
 		&cli.StringFlag{
-			Name:     "username",
-			Aliases:  []string{"u", "user"},
-			Usage:    "device username",
-			Category: "Device Info",
-			Value:    "admin",
+			Name:    "username",
+			Aliases: []string{"u", "user"},
+			Usage:   "device username",
+			Value:   "admin",
 		},
 		&cli.StringFlag{
-			Name:     "password",
-			Aliases:  []string{"p", "pass"},
-			Usage:    "Device password in plain text (don't judge me)",
-			Category: "Device Info",
+			Name:    "password",
+			Aliases: []string{"p", "pass"},
+			Usage:   "Device password in plain text (don't judge me)",
 		},
 		&cli.StringFlag{
-			Name:     "device-file",
-			Aliases:  []string{"f"},
-			Usage:    "name of json file that contains device IP, username and password",
-			Category: "Device Info",
+			Name:    "device-file",
+			Aliases: []string{"f"},
+			Usage:   "name of json file that contains device IP, username and password",
 		},
 	}
 	return append(flags, deviceFlags...)
@@ -89,16 +85,17 @@ func main() {
 
 	app := &cli.App{
 		Name:            "Flex",
-		Usage:           "CLI tool for Flexa development",
 		Version:         "v0.0.1",
+		Usage:           "CLI tool for Flexa development",
 		ArgsUsage:       " ",
-		ExitErrHandler:  ExitHandler,
 		HideHelpCommand: true,
+		ExitErrHandler:  ExitHandler,
 		Commands: []*cli.Command{
 			{
-				Name:    "init",
-				Aliases: []string{"i"},
-				Usage:   "init flexa package",
+				Name:            "init",
+				Aliases:         []string{"i"},
+				Usage:           "init flexa package",
+				HideHelpCommand: true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "name",
@@ -109,19 +106,21 @@ func main() {
 				Action: flexaInit,
 			},
 			{
-				Name:    "package",
-				Aliases: []string{"p"},
-				Usage:   "pack and upload current package",
-				Flags:   CreateDeviceFlags(),
-				Action:  flexPack,
+				Name:            "package",
+				Aliases:         []string{"p"},
+				Usage:           "pack and upload current package",
+				HideHelpCommand: true,
+				Flags:           CreateDeviceFlags(),
+				Action:          flexPack,
 			},
 			{
-				Name:      "config",
-				Aliases:   []string{"c"},
-				Usage:     "send config json to device",
-				ArgsUsage: "config file [eg: config.json]",
-				Flags:     CreateDeviceFlags(),
-				Action:    flexConfig,
+				Name:            "config",
+				Aliases:         []string{"c"},
+				Usage:           "send config json to device",
+				ArgsUsage:       "config file [eg: config.json]",
+				HideHelpCommand: true,
+				Flags:           CreateDeviceFlags(),
+				Action:          flexConfig,
 			},
 		},
 	}
