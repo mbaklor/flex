@@ -56,5 +56,8 @@ func (d Device) SendToDevice(r *http.Request) (string, error) {
 		},
 	}
 	res, err := client.Do(r)
+	if res.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("error sending to device, got status %s", res.Status)
+	}
 	return res.Status, err
 }
