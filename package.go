@@ -21,12 +21,9 @@ func flexPack(ctx *cli.Context) error {
 	if err != nil {
 		return ShowHelpAndError(ctx, err)
 	}
-	dir := ctx.String("directory")
-	if dir != "." {
-		stat, err := os.Stat(dir)
-		if err != nil || !stat.IsDir() {
-			return cli.Exit(fmt.Errorf("Can't access package folder, make sure it's here!"), 1)
-		}
+	dir, err := GetPackageDir(ctx)
+	if err != nil {
+		return cli.Exit(err, 1)
 	}
 	manifest, err := GetManifest(dir)
 	if err != nil {
@@ -51,6 +48,17 @@ func flexPack(ctx *cli.Context) error {
 	}
 	color.Green("Successfully send to device! Got reply of %s", res)
 	return nil
+}
+
+func GetPackageDir(ctx *cli.Context) (string, error) {
+	dir := ctx.String("directory")
+	if dir != "." {
+		stat, err := os.Stat(dir)
+		if err != nil || !stat.IsDir() {
+			return "", fmt.Errorf("Can't access package folder, make sure it's here!")
+		}
+	}
+	return dir, nil
 }
 
 func ZipPackage(dir string) error {
