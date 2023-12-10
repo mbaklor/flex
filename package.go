@@ -28,12 +28,16 @@ func flexPack(ctx *cli.Context) error {
 			return cli.Exit(fmt.Errorf("Can't access package folder, make sure it's here!"), 1)
 		}
 	}
-	color.Green("creating package zip")
-	zipFile, err := ZipPackage(dir)
+	manifest, err := GetManifest(dir)
 	if err != nil {
-		return err
+		return cli.Exit(err, 1)
 	}
-	body, contentType, err := CreatePackageForm(zipFile)
+	color.Green("creating package zip for %v - %v", manifest.Name, manifest.GetVersionString())
+	err = ZipPackage(dir)
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+	body, contentType, err := CreatePackageForm(manifest.GetVersionString())
 	println(contentType)
 
 	r, err := http.NewRequest("POST", fmt.Sprintf("http://%s/cgi-bin/Flexa_upload.cgi", dev.Address.String()), body)
@@ -49,10 +53,10 @@ func flexPack(ctx *cli.Context) error {
 	return nil
 }
 
-func ZipPackage(dir string) (*os.File, error) {
+func ZipPackage(dir string) error {
 	packFile, err := os.Create("package.zip")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	// packFile := new(bytes.Buffer)
 	zipper := zip.NewWriter(packFile)
@@ -90,14 +94,14 @@ func ZipPackage(dir string) (*os.File, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = zipper.Close()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return packFile, nil
+	return nil
 }
 
 func CreateFormZip(w *multipart.Writer, fieldname, filename string) (io.Writer, error) {
@@ -107,7 +111,7 @@ func CreateFormZip(w *multipart.Writer, fieldname, filename string) (io.Writer, 
 	return w.CreatePart(h)
 }
 
-func CreatePackageForm(c *os.File) (*bytes.Buffer, string, error) {
+func CreatePackageForm(version string) (*bytes.Buffer, string, error) {
 	body := &bytes.Buffer{}
 	content, err := os.ReadFile("package.zip")
 	if err != nil {
@@ -125,7 +129,7 @@ func CreatePackageForm(c *os.File) (*bytes.Buffer, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	ver.Write([]byte("0.0.1+pack4"))
+	ver.Write([]byte(version))
 
 	return body, writer.FormDataContentType(), nil
 }
