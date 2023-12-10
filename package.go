@@ -79,7 +79,7 @@ func ZipPackage(dir string) (*os.File, error) {
 		if err != nil {
 			return err
 		}
-		file, err := os.ReadFile(path)
+		file, err := ReadFile(path)
 		if err != nil {
 			return err
 		}
