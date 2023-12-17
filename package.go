@@ -35,7 +35,6 @@ func flexPack(ctx *cli.Context) error {
 		return cli.Exit(err, 1)
 	}
 	body, contentType, err := CreatePackageForm(manifest.GetVersionString())
-	println(contentType)
 
 	r, err := http.NewRequest("POST", fmt.Sprintf("http://%s/cgi-bin/Flexa_upload.cgi", dev.Address.String()), body)
 	r.Header.Add("Content-Type", contentType)
@@ -86,7 +85,7 @@ func ZipPackage(dir string) error {
 		if relPath == "package.zip" {
 			return nil
 		}
-		fmt.Printf("\t%s\n", relPath)
+		fmt.Printf("\tadding: %s\n", relPath)
 		zipFile, err := zipper.Create(relPath)
 		if err != nil {
 			return err
