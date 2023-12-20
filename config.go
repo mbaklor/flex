@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"mime/multipart"
-	"net/http"
 	"os"
 
 	"github.com/fatih/color"
@@ -12,7 +11,7 @@ import (
 )
 
 func flexConfig(ctx *cli.Context) error {
-	dev, err := CheckForDevice(ctx)
+	devs, err := CheckForDevice(ctx)
 	if err != nil {
 		return ShowHelpAndError(ctx, err)
 	}
@@ -28,16 +27,13 @@ func flexConfig(ctx *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
-	r, err := http.NewRequest("POST", fmt.Sprintf("http://%s/cgi-bin/Flexa_upload.cgi", dev.Address.String()), body)
-	r.Header.Add("Content-Type", contentType)
-
-	color.Green("Sending %s to %s\n", confFile, dev.Address.String())
-
-	res, err := dev.SendToDevice(r)
-	if err != nil {
-		return cli.Exit(err, 1)
+	for _, dev := range devs {
+		color.Green("Sending %s to %s\n", confFile, dev.Address.String())
+		err := SendToDev(dev, body, contentType)
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
 	}
-	color.Green("Successfully send to device! Got reply of %s", res)
 	return nil
 }
 

@@ -1,13 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
+	"mbaklor/flex/device"
+	"net/http"
 	"os"
 
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
-	"mbaklor/flex/device"
 )
 
 func flexaInit(ctx *cli.Context) error {
@@ -34,10 +36,10 @@ func CreateDeviceFlags(flags ...cli.Flag) []cli.Flag {
 			Aliases: []string{"p", "pass"},
 			Usage:   "Device password in plain text (don't judge me)",
 		},
-		&cli.StringFlag{
+		&cli.StringSliceFlag{
 			Name:    "device-file",
 			Aliases: []string{"f"},
-			Usage:   "name of json file that contains device IP, username and password",
+			Usage:   "JSON file that contains device IP, username and password, can be used multiple times",
 		},
 	}
 	return append(flags, deviceFlags...)
@@ -56,29 +58,45 @@ func ExitHandler(ctx *cli.Context, err error) {
 	}
 }
 
-func CheckForDevice(ctx *cli.Context) (device.Device, error) {
-	devFile := ctx.String("device-file")
+func CheckForDevice(ctx *cli.Context) ([]device.Device, error) {
+	devFile := ctx.StringSlice("device-file")
 	devIP := ctx.String("address")
-	if devFile == "" && devIP == "" {
-		return device.Device{}, fmt.Errorf("Required either device file or IP address")
+	devCount := len(devFile)
+	if devCount == 0 && devIP == "" {
+		return nil, fmt.Errorf("Required either device file or IP address")
 	}
 
-	var dev device.Device
-	var err error
-	if devFile != "" {
-		dev, err = device.NewDeviceFromFile(devFile)
-		if err != nil {
-			return device.Device{}, err
+	devs := make([]device.Device, devCount)
+	if devCount != 0 {
+		for idx := range devs {
+			dev, err := device.NewDeviceFromFile(devFile[idx])
+			if err != nil {
+				return nil, err
+			}
+			devs[idx] = dev
 		}
 	} else {
 		devUser := ctx.String("username")
 		devPass := ctx.String("password")
-		dev, err = device.NewDevice(devIP, devUser, devPass)
+		dev, err := device.NewDevice(devIP, devUser, devPass)
 		if err != nil {
-			return device.Device{}, err
+			return nil, err
 		}
+		devs = append(devs, dev)
 	}
-	return dev, nil
+	return devs, nil
+}
+
+func SendToDev(dev device.Device, body *bytes.Buffer, contentType string) error {
+	r, err := http.NewRequest("POST", fmt.Sprintf("http://%s/cgi-bin/Flexa_upload.cgi", dev.Address.String()), body)
+	r.Header.Add("Content-Type", contentType)
+
+	res, err := dev.SendToDevice(r)
+	if err != nil {
+		return err
+	}
+	color.Green("Successfully sent to device! Got reply of %s", res)
+	return nil
 }
 
 func main() {

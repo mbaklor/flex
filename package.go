@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"net/http"
 	"net/textproto"
 	"os"
 	"path/filepath"
@@ -17,7 +16,7 @@ import (
 )
 
 func flexPack(ctx *cli.Context) error {
-	dev, err := CheckForDevice(ctx)
+	devs, err := CheckForDevice(ctx)
 	if err != nil {
 		return ShowHelpAndError(ctx, err)
 	}
@@ -36,16 +35,13 @@ func flexPack(ctx *cli.Context) error {
 	}
 	body, contentType, err := CreatePackageForm(manifest.GetVersionString())
 
-	r, err := http.NewRequest("POST", fmt.Sprintf("http://%s/cgi-bin/Flexa_upload.cgi", dev.Address.String()), body)
-	r.Header.Add("Content-Type", contentType)
-
-	color.Green("Sending package to %s\n", dev.Address.String())
-
-	res, err := dev.SendToDevice(r)
-	if err != nil {
-		return cli.Exit(err, 1)
+	for _, dev := range devs {
+		color.Green("Sending package to %s\n", dev.Address.String())
+		err = SendToDev(dev, body, contentType)
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
 	}
-	color.Green("Successfully send to device! Got reply of %s", res)
 	return nil
 }
 
