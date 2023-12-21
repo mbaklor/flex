@@ -1,11 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"mbaklor/flex/device"
-	"net/http"
 	"os"
 
 	"github.com/fatih/color"
@@ -79,22 +77,6 @@ func CheckForDevice(ctx *cli.Context) ([]device.Device, error) {
 		devs = append(devs, dev)
 	}
 	return devs, nil
-}
-
-func SendToDev(dev device.Device, body *bytes.Buffer, contentType string) error {
-	r, err := http.NewRequest("POST", fmt.Sprintf("http://%s/cgi-bin/Flexa_upload.cgi", dev.Address.String()), body)
-	if err != nil {
-		return err
-	}
-	r.Header.Add("Content-Type", contentType)
-
-	res, err := dev.SendToDevice(r)
-	if err != nil {
-		color.Red("Failed to send to %s: %v", dev.Address, err)
-	} else {
-		color.Green("Successfully sent to device! Got reply of %s", res)
-	}
-	return nil
 }
 
 func main() {

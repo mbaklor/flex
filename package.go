@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"mbaklor/flex/device"
 	"mime/multipart"
 	"net/textproto"
 	"os"
@@ -34,14 +35,7 @@ func flexPack(ctx *cli.Context) error {
 		return cli.Exit(err, 1)
 	}
 	body, contentType, err := CreatePackageForm(manifest.GetVersionString())
-
-	for _, dev := range devs {
-		color.Green("Sending package to %s\n", dev.Address.String())
-		err = SendToDev(dev, body, contentType)
-		if err != nil {
-			return cli.Exit(err, 1)
-		}
-	}
+	err = device.SendToDevs(devs, body, contentType)
 	return nil
 }
 

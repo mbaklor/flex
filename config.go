@@ -3,10 +3,10 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"mbaklor/flex/device"
 	"mime/multipart"
 	"os"
 
-	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
 
@@ -27,13 +27,7 @@ func flexConfig(ctx *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, 1)
 	}
-	for _, dev := range devs {
-		color.Green("Sending %s to %s\n", confFile, dev.Address.String())
-		err := SendToDev(dev, body, contentType)
-		if err != nil {
-			return cli.Exit(err, 1)
-		}
-	}
+	err = device.SendToDevs(devs, body, contentType)
 	return nil
 }
 
