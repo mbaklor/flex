@@ -12,12 +12,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func flexaInit(ctx *cli.Context) error {
-	name := ctx.String("name")
-	println("init project", name)
-	return nil
-}
-
 func CreateDeviceFlags(flags ...cli.Flag) []cli.Flag {
 	deviceFlags := []cli.Flag{
 		&cli.StringFlag{
@@ -120,9 +114,29 @@ func main() {
 				HideHelpCommand: true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:     "name",
-						Aliases:  []string{"n"},
-						Required: true,
+						Name:    "name",
+						Aliases: []string{"n"},
+						Usage:   "name of the flexa app",
+					},
+					&cli.StringFlag{
+						Name:    "app-log",
+						Aliases: []string{"l"},
+						Usage:   "filename for the log file created for this app",
+					},
+					&cli.BoolFlag{
+						Name:    "web-log",
+						Aliases: []string{"w"},
+						Usage:   "add a file to show the app log in the web UI",
+					},
+					&cli.BoolFlag{
+						Name:    "git",
+						Aliases: []string{"g"},
+						Usage:   "initialize a git repository for package",
+					},
+					&cli.BoolFlag{
+						Name:    "confirm",
+						Aliases: []string{"y"},
+						Usage:   "confirm all defaults, if used must provide name flag as well",
 					},
 				},
 				Action: flexaInit,
