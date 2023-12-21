@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 )
 
@@ -15,18 +17,22 @@ func SendToDev(dev Device, body *bytes.Buffer, contentType string) error {
 	}
 	r.Header.Add("Content-Type", contentType)
 
+	s := spinner.New(spinner.CharSets[14], 100*time.Millisecond)
+	s.Color("cyan")
+	s.Suffix = color.GreenString(" Sending to %s", dev.Address.String())
+	s.Start()
 	res, err := dev.SendToDevice(r)
+	s.Stop()
 	if err != nil {
 		color.Red("Failed to send to %s: %v", dev.Address, err)
 	} else {
-		color.Green("Successfully sent to device! Got reply of %s", res)
+		color.Green("Successfully sent to %s! Got reply of %s", dev.Address.String(), res)
 	}
 	return nil
 }
 
 func SendToDevs(devs []Device, body *bytes.Buffer, contentType string) error {
 	for _, dev := range devs {
-		color.Green("Sending to %s\n", dev.Address.String())
 		err := SendToDev(dev, body, contentType)
 		if err != nil {
 			return err
