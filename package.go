@@ -56,6 +56,38 @@ func GetPackageDir(ctx *cli.Context) (string, error) {
 	return dir, nil
 }
 
+func getRelPath(rootDir, path string) string {
+	trimPath := path
+	if rootDir != "." {
+		trimPath = strings.TrimPrefix(path, rootDir)
+	}
+	relPath := strings.Replace(strings.TrimPrefix(trimPath, string(filepath.Separator)), "\\", "/", -1)
+	if relPath[0] == byte('.') || strings.Contains(relPath, "/.") {
+		return ""
+	}
+	if relPath == "package.zip" {
+		return ""
+	}
+	return relPath
+}
+
+func writeFileToZip(zipper *zip.Writer, path, relPath string) error {
+	fmt.Printf("\tadding: %s\n", relPath)
+	zipFile, err := zipper.Create(relPath)
+	if err != nil {
+		return err
+	}
+	file, err := ReadFile(path)
+	if err != nil {
+		return err
+	}
+	_, err = zipFile.Write(file)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func ZipPackage(dir string) error {
 	packFile, err := os.Create("package.zip")
 	if err != nil {
@@ -70,30 +102,11 @@ func ZipPackage(dir string) error {
 		if err != nil {
 			return err
 		}
-		trimPath := path
-		if dir != "." {
-			trimPath = strings.TrimPrefix(path, dir)
-		}
-		relPath := strings.Replace(strings.TrimPrefix(trimPath, string(filepath.Separator)), "\\", "/", -1)
-		if relPath[0] == byte('.') || strings.Contains(relPath, "/.") {
+		relPath := getRelPath(dir, path)
+		if relPath == "" {
 			return nil
 		}
-		if relPath == "package.zip" {
-			return nil
-		}
-		fmt.Printf("\tadding: %s\n", relPath)
-		zipFile, err := zipper.Create(relPath)
-		if err != nil {
-			return err
-		}
-		file, err := ReadFile(path)
-		if err != nil {
-			return err
-		}
-		_, err = zipFile.Write(file)
-		if err != nil {
-			return err
-		}
+		err = writeFileToZip(zipper, path, relPath)
 		return nil
 	})
 	if err != nil {
