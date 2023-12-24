@@ -35,6 +35,7 @@ func GetInitInfo(ctx *cli.Context) (initInfo, error) {
 	}
 	return initInfo{name, logfile, isWeb, isGit}, nil
 }
+
 func getName(ctx *cli.Context, confirm bool) (string, error) {
 	name := ctx.String("name")
 	if name == "" {

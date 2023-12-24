@@ -12,41 +12,45 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type fromVer struct {
-	From string `json:"from"`
-}
-type manifest struct {
-	Name            string    `json:"name"`
-	FirmwareVersion []fromVer `json:"firmware_versions"`
-	AppLog          string    `json:"app_log"`
-	Version         string    `json:"version"`
-	Build           string    `json:"build"`
-}
+//go:embed template
+var Template embed.FS
 
-func CreateManifest(name, logfile string) manifest {
-	return manifest{
-		Name:            name,
-		FirmwareVersion: []fromVer{{"2.1.2"}},
-		AppLog:          logfile,
-		Version:         "0.0.1",
-		Build:           "1",
-	}
-}
+func flexaInit(ctx *cli.Context) error {
+	init, err := GetInitInfo(ctx)
 
-func WriteManifest(init initInfo) error {
-	manifest := CreateManifest(init.Name, init.AppLog)
-	fileBytes, err := json.Marshal(manifest)
+	color.Green("Initializing project: %s", init.Name)
+	err = CreateInitDir(init.Name)
 	if err != nil {
-		return err
+		return cli.Exit(err, 1)
 	}
-	file, err := os.Create("manifest.json")
+	err = walkTemplate(init.IsWeb)
 	if err != nil {
-		return err
+		color.Yellow("Error encountered, cleaning up project directory")
+		os.Chdir("..")
+		e := os.Remove(init.Name)
+		if e != nil {
+			return cli.Exit(e, 1)
+		}
+		return cli.Exit(err, 1)
 	}
-	_, err = file.Write(fileBytes)
+	err = WriteManifest(init)
 	if err != nil {
-		return err
+		color.Yellow("Error encountered, cleaning up project directory")
+		os.Chdir("..")
+		e := os.Remove(init.Name)
+		if e != nil {
+			return cli.Exit(e, 1)
+		}
+		return cli.Exit(err, 1)
 	}
+	if init.IsGit {
+		color.Green("Initializing git repository in project folder")
+		err = InitGit()
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+	color.Green("Created project %s successfully", init.Name)
 	return nil
 }
 
@@ -115,46 +119,20 @@ func writeFileFromTemplate(path, relPath string) error {
 	return nil
 }
 
-//go:embed template
-var Template embed.FS
-
-func flexaInit(ctx *cli.Context) error {
-	init, err := GetInitInfo(ctx)
-
-	color.Green("Initializing project: %s", init.Name)
-	err = CreateInitDir(init.Name)
+func WriteManifest(init initInfo) error {
+	manifest := CreateManifest(init.Name, init.AppLog)
+	fileBytes, err := json.Marshal(manifest)
 	if err != nil {
-		return cli.Exit(err, 1)
+		return err
 	}
-	err = walkTemplate(init.IsWeb)
+	file, err := os.Create("manifest.json")
 	if err != nil {
-		color.Yellow("Error encountered, cleaning up project directory")
-		os.Chdir("..")
-		e := os.Remove(init.Name)
-		if e != nil {
-			return cli.Exit(e, 1)
-		}
-		return cli.Exit(err, 1)
+		return err
 	}
-	err = WriteManifest(init)
+	_, err = file.Write(fileBytes)
 	if err != nil {
-		color.Yellow("Error encountered, cleaning up project directory")
-		os.Chdir("..")
-		e := os.Remove(init.Name)
-		if e != nil {
-			return cli.Exit(e, 1)
-		}
-		return cli.Exit(err, 1)
+		return err
 	}
-	if init.IsGit {
-		color.Green("Initializing git repository in project folder")
-		err = InitGit()
-		if err != nil {
-			return cli.Exit(err, 1)
-		}
-	}
-	color.Green("Created project %s successfully", init.Name)
-
 	return nil
 }
 

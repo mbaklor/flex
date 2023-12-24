@@ -7,10 +7,25 @@ import (
 	"path"
 )
 
+type fwVer struct {
+	From string `json:"from"`
+}
 type Manifest struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-	Build   string `json:"build"`
+	Name            string  `json:"name"`
+	FirmwareVersion []fwVer `json:"firmware_versions"`
+	AppLog          string  `json:"app_log"`
+	Version         string  `json:"version"`
+	Build           string  `json:"build"`
+}
+
+func CreateManifest(name, logfile string) Manifest {
+	return Manifest{
+		Name:            name,
+		FirmwareVersion: []fwVer{{"2.1.2"}},
+		AppLog:          logfile,
+		Version:         "0.0.1",
+		Build:           "1",
+	}
 }
 
 func GetManifest(dir string) (Manifest, error) {
