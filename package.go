@@ -55,7 +55,8 @@ func getRelPath(rootDir, path string) string {
 	if rootDir != "." {
 		trimPath = strings.TrimPrefix(path, rootDir)
 	}
-	relPath := strings.Replace(strings.TrimPrefix(trimPath, string(filepath.Separator)), "\\", "/", -1)
+	relPath := strings.Replace(trimPath, "\\", "/", -1)
+	relPath = strings.TrimPrefix(relPath, "/")
 	if relPath[0] == byte('.') || strings.Contains(relPath, "/.") {
 		return ""
 	}
