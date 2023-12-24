@@ -60,7 +60,7 @@ func CreateInitDir(name string) error {
 		return fmt.Errorf("path '%s' exists, can't create flexa package", name)
 	}
 
-	err = os.Mkdir(name, 755)
+	err = os.Mkdir(name, 0755)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func walkTemplate(web bool) error {
 			return nil
 		}
 		if d.IsDir() {
-			return os.Mkdir(relPath, 755)
+			return os.Mkdir(relPath, 0755)
 		}
 		if relPath == "web_ui/menu.json" {
 			if !web {
