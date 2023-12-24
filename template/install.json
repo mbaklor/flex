@@ -1,0 +1,4 @@
+{
+  "scripPath": "run.py",
+  "run": "python3 run.py"
+}

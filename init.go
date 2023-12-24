@@ -1,122 +1,171 @@
 package main
 
 import (
+	"embed"
+	"encoding/json"
 	"fmt"
+	"io/fs"
+	"os"
+	"os/exec"
 
-	"github.com/cqroot/prompt"
-	"github.com/cqroot/prompt/choose"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
 
-func getName(ctx *cli.Context, confirm bool) (string, error) {
-	name := ctx.String("name")
-	if name == "" {
-		if confirm {
-			return "", ShowHelpAndError(ctx, fmt.Errorf("can't use confirm flag without name flag"))
-		}
-		inp, err := prompt.New().
-			Ask("Project name:").
-			Input("")
-		if err != nil {
-			return "", err
-		}
-		if inp != "" {
-			name = inp
-		} else {
-			return "", fmt.Errorf("No project name provided\nHow do you expect this to work??")
-		}
-	}
-	return name, nil
+type fromVer struct {
+	From string `json:"from"`
+}
+type manifest struct {
+	Name            string    `json:"name"`
+	FirmwareVersion []fromVer `json:"firmware_versions"`
+	AppLog          string    `json:"app_log"`
+	Version         string    `json:"version"`
+	Build           string    `json:"build"`
 }
 
-func getLog(ctx *cli.Context, confirm bool) (string, error) {
-	logfile := ctx.String("app-log")
-	if logfile == "" {
-		if confirm {
-			return "app_log.log", nil
-		}
-		inp, err := prompt.New().
-			Ask("App log filename:").
-			Input("app_log.log")
-		if err != nil {
-			return "", err
-		}
-		if inp != "" {
-			logfile = inp
-		} else {
-			logfile = "app_log.log"
-		}
+func CreateManifest(name, logfile string) manifest {
+	return manifest{
+		Name:            name,
+		FirmwareVersion: []fromVer{{"2.1.2"}},
+		AppLog:          logfile,
+		Version:         "0.0.1",
+		Build:           "1",
 	}
-	return logfile, nil
 }
 
-func getWeb(ctx *cli.Context, confirm bool) (bool, error) {
-	isWeb := ctx.Bool("web-log")
-	if !isWeb {
-		if confirm {
-			return false, nil
-		}
-		inp, err := prompt.New().
-			Ask("Show app log page in web UI menu?").
-			Choose(
-				[]string{"Yes", "No"},
-				choose.WithTheme(choose.ThemeLine),
-				choose.WithKeyMap(choose.HorizontalKeyMap),
-			)
-		if err != nil {
-			return false, err
-		}
-		if inp == "Yes" {
-			isWeb = true
-		}
+func WriteManifest(init initInfo) error {
+	manifest := CreateManifest(init.Name, init.AppLog)
+	fileBytes, err := json.Marshal(manifest)
+	if err != nil {
+		return err
 	}
-	return isWeb, nil
+	file, err := os.Create("manifest.json")
+	if err != nil {
+		return err
+	}
+	_, err = file.Write(fileBytes)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func getGit(ctx *cli.Context, confirm bool) (bool, error) {
-	isGit := ctx.Bool("git")
-	if !isGit {
-		if confirm {
-			return false, nil
-		}
-		inp, err := prompt.New().
-			Ask("Initialize git repository in project?").
-			Choose(
-				[]string{"Yes", "No"},
-				choose.WithTheme(choose.ThemeLine),
-				choose.WithKeyMap(choose.HorizontalKeyMap),
-			)
-		if err != nil {
-			return false, err
-		}
-		if inp == "Yes" {
-			isGit = true
-		}
+func CreateInitDir(name string) error {
+	_, err := os.Stat(name)
+	if !os.IsNotExist(err) {
+		return fmt.Errorf("path '%s' exists, can't create flexa package", name)
 	}
-	return isGit, nil
+
+	err = os.Mkdir(name, 755)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("\tCreated project folder in '%s'\n", name)
+	err = os.Chdir(name)
+	if err != nil {
+		return err
+	}
+	return nil
 }
+
+func walkTemplate(web bool) error {
+	dir := "template"
+	err := fs.WalkDir(Template, dir, func(path string, d fs.DirEntry, err error) error {
+		if path == dir {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		relPath := getRelPath(dir, path)
+		if relPath == "" {
+			return nil
+		}
+		if d.IsDir() {
+			return os.Mkdir(relPath, 755)
+		}
+		if relPath == "web_ui/menu.json" {
+			if !web {
+				return nil
+			}
+		}
+		err = writeFileFromTemplate(path, relPath)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
+}
+
+func writeFileFromTemplate(path, relPath string) error {
+	fmt.Printf("\tcreating: %s\n", relPath)
+	file, err := os.Create(relPath)
+	if err != nil {
+		return err
+	}
+	fileBytes, err := Template.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	_, err = file.Write(fileBytes)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+//go:embed template
+var Template embed.FS
 
 func flexaInit(ctx *cli.Context) error {
-	confirm := ctx.Bool("confirm")
-	name, err := getName(ctx, confirm)
-	if err != nil {
-		return cli.Exit(err, 1)
-	}
-	logfile, err := getLog(ctx, confirm)
-	if err != nil {
-		return cli.Exit(err, 1)
-	}
-	isWeb, err := getWeb(ctx, confirm)
-	if err != nil {
-		return cli.Exit(err, 1)
-	}
-	isGit, err := getGit(ctx, confirm)
-	if err != nil {
-		return cli.Exit(err, 1)
-	}
+	init, err := GetInitInfo(ctx)
 
-	color.Green("Initializing project: %s with log file %s", name, logfile)
-	println(isWeb, isGit)
+	color.Green("Initializing project: %s", init.Name)
+	err = CreateInitDir(init.Name)
+	if err != nil {
+		return cli.Exit(err, 1)
+	}
+	err = walkTemplate(init.IsWeb)
+	if err != nil {
+		color.Yellow("Error encountered, cleaning up project directory")
+		os.Chdir("..")
+		e := os.Remove(init.Name)
+		if e != nil {
+			return cli.Exit(e, 1)
+		}
+		return cli.Exit(err, 1)
+	}
+	err = WriteManifest(init)
+	if err != nil {
+		color.Yellow("Error encountered, cleaning up project directory")
+		os.Chdir("..")
+		e := os.Remove(init.Name)
+		if e != nil {
+			return cli.Exit(e, 1)
+		}
+		return cli.Exit(err, 1)
+	}
+	if init.IsGit {
+		color.Green("Initializing git repository in project folder")
+		err = InitGit()
+		if err != nil {
+			return cli.Exit(err, 1)
+		}
+	}
+	color.Green("Created project %s successfully", init.Name)
+
+	return nil
+}
+
+func InitGit() error {
+	_, err := exec.LookPath("git")
+	if err != nil {
+		return fmt.Errorf("can't find git binary, make sure you have git installed on this system")
+	}
+	err = exec.Command("git", "init").Run()
+	if err != nil {
+		return err
+	}
 	return nil
 }

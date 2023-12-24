@@ -1,0 +1,9 @@
+{
+  "add": [
+    {
+      "label": "App Log",
+      "link": "cgi-bin/app_log.cgi",
+      "title": "See app log"
+    }
+  ]
+}
