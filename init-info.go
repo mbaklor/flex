@@ -29,7 +29,7 @@ func GetInitInfo(ctx *cli.Context) (initInfo, error) {
 	if err != nil {
 		return initInfo{}, cli.Exit(err, 1)
 	}
-	isGit, err := getGit(ctx, confirm)
+	isGit := getGit(ctx, confirm)
 	if err != nil {
 		return initInfo{}, cli.Exit(err, 1)
 	}
@@ -100,25 +100,7 @@ func getWeb(ctx *cli.Context, confirm bool) (bool, error) {
 	return isWeb, nil
 }
 
-func getGit(ctx *cli.Context, confirm bool) (bool, error) {
+func getGit(ctx *cli.Context, confirm bool) bool {
 	isGit := ctx.Bool("git")
-	if !isGit {
-		if confirm {
-			return false, nil
-		}
-		inp, err := prompt.New().
-			Ask("Initialize git repository in project?").
-			Choose(
-				[]string{"Yes", "No"},
-				choose.WithTheme(choose.ThemeLine),
-				choose.WithKeyMap(choose.HorizontalKeyMap),
-			)
-		if err != nil {
-			return false, err
-		}
-		if inp == "Yes" {
-			isGit = true
-		}
-	}
-	return isGit, nil
+	return isGit
 }
