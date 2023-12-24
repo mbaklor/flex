@@ -102,6 +102,9 @@ func ZipPackage(dir string) error {
 			return nil
 		}
 		err = writeFileToZip(zipper, path, relPath)
+		if err != nil {
+			return err
+		}
 		return nil
 	})
 	if err != nil {
