@@ -3,7 +3,6 @@ from logging.handlers import RotatingFileHandler
 from platform import python_version
 from json import load
 from uci import Uci  # type: ignore
-from os import system
 
 M400 = "M400"
 MPI400 = "MPI400"
@@ -11,25 +10,27 @@ LX400 = "LX400"
 
 
 # implement a rotating log with n log files maximum
-def initLogger(logFileName: str, maxFileSize: int, numBackups: int, debugMode: bool):
+def init_logger(
+    log_file_name: str, max_file_size: int, num_backups: int, debug_mode: bool
+):
     """
     implement a rotating log with n log files maximum
     """
-    rotHandler = RotatingFileHandler(
-        logFileName, maxBytes=maxFileSize, backupCount=numBackups
+    rot_handler = RotatingFileHandler(
+        log_file_name, maxBytes=max_file_size, backupCount=num_backups
     )
-    if debugMode:
-        levelMode = logging.DEBUG
+    if debug_mode:
+        level_mode = logging.DEBUG
     else:
-        levelMode = logging.INFO
+        level_mode = logging.INFO
     logging.basicConfig(
-        level=levelMode,
-        handlers=[rotHandler],
+        level=level_mode,
+        handlers=[rot_handler],
         format="%(asctime)s\t%(levelname)s\t%(filename)s\t%(message)s",
     )
 
 
-def getAppData():
+def get_app_data():
     """
     check runtime info from manifest and uci config
 
@@ -48,12 +49,12 @@ def getAppData():
             app_log = "app_log.log"
     with Uci() as u:
         app_ver: str = u.get("flexa_agent.service.package_version")
-        if type(app_ver) is not str:
+        if not isinstance(app_ver, str):
             app_ver = ""
     return app_name, app_log, app_ver
 
 
-def getHWName():
+def get_hw_name():
     """
     check hardware name from factory info
 
@@ -74,12 +75,17 @@ def getHWName():
 
 def init():
     """
-    general init function for flexa, starts a logger to the log file, logs out hardware name, python version, app name and app version
+    general init function for flexa:
+    starts a logger to the log file, logs out hardware name, python version, app name, app version
     """
-    app_name, app_log, app_ver = getAppData()
-    initLogger(f"/var/log/{app_log}", 2 * 1024 * 1024, 3, False)
+    app_name, app_log, app_ver = get_app_data()
+    init_logger(f"/var/log/{app_log}", 2 * 1024 * 1024, 3, False)
     logger = logging.getLogger(__name__)
-    hw_name = getHWName()
+    hw_name = get_hw_name()
     logger.info(
-        f'Started {hw_name}: python={python_version()} app="{app_name} {app_ver}"'
+        'Started %s: python=%s app="%s %s"',
+        hw_name,
+        python_version(),
+        app_name,
+        app_ver,
     )
