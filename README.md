@@ -22,22 +22,50 @@ Simply `git clone`, `cd` into the folder, and `go install`
 ### Initialize a package
 
 ```
-flex init [-n project name] [-l app log file name] [-w show app log in the webui] [-y confirm default log name and webui settings] [-g git init in project]
+flex init [-n] [-l] [-w] [-y] [-g]
 ```
+
+- `-n` - project name
+- `-l` - name of app log file, default is `app_log.log`
+- `-w` - use this flag to add the app log as a tab in the Flexa web UI
+- `-y` - use default options for both `-l` and `-w`
+- `-g` - initialize a git repo in the package folder
 
 The init command can also be called with no arguments and will prompt you for them.
 
 ### Zip and send package to a device
 
 ```
-flex package [-d directory name] [-b bundle in zip without sending to device] [-a -u -p address username and password of device] [-f json file containing device info, can be multiple]
+flex package [-d] [-b] [-a -u -p] [-f]
 ```
 
-If no directory name is given, cwd is assumed.
+- `-d` - directory to zip, if none provided `cwd` is assumed
+- `-b` - use this flag to bundle (zip) the package without sending to a device, if provided the next flags are ignored
+- `-a` - IP address of Flexa device to send package to
+- `-u` - username of Flexa device
+- `-p` - password of Flexa device
+- `-f` - json file or files containing address, username, and password of Flexa device
+
 If no device information is supplied, you get prompted if you want to bundle without sending.
 
 ### Send config file
 
 ```
-flex config [-a -u -p address username and password of device] [-f json file containing device info, can be multiple] (config file name eg: config.json)
+flex config [-a -u -p] [-f] (arg)
+```
+
+- `-a` - IP address of Flexa device to send package to
+- `-u` - username of Flexa device
+- `-p` - password of Flexa device
+- `-f` - json file or files containing address, username, and password of Flexa device
+- `(arg)` - config file to send, needs to be in json format
+
+### device json example
+
+```json
+{
+  "address": "1.2.3.4",
+  "username": "admin",
+  "password": "1234"
+}
 ```
