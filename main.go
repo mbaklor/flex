@@ -79,8 +79,7 @@ func CheckForDevice(ctx *cli.Context) ([]device.Device, error) {
 	return devs, nil
 }
 
-func main() {
-
+func CreateCLIApp() *cli.App {
 	app := &cli.App{
 		Name:            "Flex",
 		Version:         "v0.0.1",
@@ -154,6 +153,11 @@ func main() {
 			},
 		},
 	}
+	return app
+}
+
+func main() {
+	app := CreateCLIApp()
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
