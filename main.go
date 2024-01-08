@@ -129,6 +129,11 @@ func main() {
 				Usage:           "pack and upload current package",
 				HideHelpCommand: true,
 				Flags: CreateDeviceFlags(
+					&cli.BoolFlag{
+						Name:    "bundle",
+						Aliases: []string{"b"},
+						Usage:   "bundle package without sending to device",
+					},
 					&cli.StringFlag{
 						Name:    "directory",
 						Aliases: []string{"d"},

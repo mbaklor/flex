@@ -12,14 +12,35 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/cqroot/prompt"
+	"github.com/cqroot/prompt/choose"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
 
 func flexPack(ctx *cli.Context) error {
-	devs, err := CheckForDevice(ctx)
-	if err != nil {
-		return ShowHelpAndError(ctx, err)
+	bundle := ctx.Bool("bundle")
+	var devs []device.Device
+	if !bundle {
+		var err error
+		devs, err = CheckForDevice(ctx)
+		if err != nil {
+			b, e := prompt.New().
+				Ask("No device supplied, do you want to bundle without sending to device?").
+				Choose(
+					[]string{"Yes", "No"},
+					choose.WithTheme(choose.ThemeLine),
+					choose.WithKeyMap(choose.HorizontalKeyMap),
+				)
+			if e != nil {
+				return e
+			}
+			if b == "Yes" {
+				bundle = true
+			} else {
+				return ShowHelpAndError(ctx, err)
+			}
+		}
 	}
 	dir, err := GetPackageDir(ctx)
 	if err != nil {
@@ -35,7 +56,9 @@ func flexPack(ctx *cli.Context) error {
 		return cli.Exit(err, 1)
 	}
 	body, contentType, err := CreatePackageForm(manifest.GetVersionString())
-	err = device.SendToDevs(devs, body, contentType)
+	if !bundle {
+		err = device.SendToDevs(devs, body, contentType)
+	}
 	return nil
 }
 
