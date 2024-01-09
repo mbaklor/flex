@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"mbaklor/flex/device"
+	"github.com/mbaklor/flex/device"
 	"mime/multipart"
 	"os"
 

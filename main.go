@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/mbaklor/flex/device"
 	"log"
-	"mbaklor/flex/device"
 	"os"
 
 	"github.com/fatih/color"

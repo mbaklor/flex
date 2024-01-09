@@ -12,10 +12,22 @@ Place the binary somewhere in your path, and call the app from your command line
 
 You can download the binary from the [release page](https://github.com/mbaklor/flex/releases)
 
+### Go
+
+You can install this tool with go using the following command:
+
+```
+go install github.com/mbaklor/flex
+```
+
+note: you may need to add `~/go/bin` to your path to access the tool after install
+
 ### Build from source
 
 To build a binary from source you need git and go installed on your system.
 Simply `git clone`, `cd` into the folder, and `go install`
+
+note: you may need to add `~/go/bin` to your path to access the tool after install
 
 ## Usage
 

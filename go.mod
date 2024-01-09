@@ -1,4 +1,4 @@
-module mbaklor/flex
+module github.com/mbaklor/flex
 
 go 1.21.0
 
