@@ -89,9 +89,12 @@ func getRelPath(rootDir, path string) string {
 	return relPath
 }
 
-func writeFileToZip(zipper *zip.Writer, path, relPath string) error {
+func writeFileToZip(zipper *zip.Writer, path, relPath string, info os.FileInfo) error {
 	fmt.Printf("\tadding: %s\n", relPath)
-	zipFile, err := zipper.Create(relPath)
+	fh, _ := zip.FileInfoHeader(info)
+	fh.Method = zip.Deflate
+	fh.Name = relPath
+	zipFile, err := zipper.CreateHeader(fh)
 	if err != nil {
 		return err
 	}
@@ -124,7 +127,7 @@ func ZipPackage(dir string) error {
 		if relPath == "" {
 			return nil
 		}
-		err = writeFileToZip(zipper, path, relPath)
+		err = writeFileToZip(zipper, path, relPath, info)
 		if err != nil {
 			return err
 		}
