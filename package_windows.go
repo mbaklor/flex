@@ -3,33 +3,23 @@
 package main
 
 import (
-	"bufio"
+	"fmt"
 	"os"
 	"strings"
+	"unicode/utf8"
 )
 
 func ReadFile(path string) ([]byte, error) {
 	var file []byte
 	var err error
-	if strings.HasSuffix(path, ".cgi") {
-		file, err = ReadFileOnlyLF(path)
-	} else {
-		file, err = os.ReadFile(path)
+	file, err = os.ReadFile(path)
+	if utf8.ValidString(string(file)) {
+		fileStr := string(file)
+		if strings.IndexRune(fileStr, '\r') > -1 {
+			fmt.Println("\t\tConverting CRLF to LF")
+			fileStr = strings.Join(strings.Split(fileStr, "\r"), "")
+			file = []byte(fileStr)
+		}
 	}
 	return file, err
-}
-
-func ReadFileOnlyLF(path string) ([]byte, error) {
-	osfile, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	buf := bufio.NewScanner(osfile)
-	file := make([]byte, 0, 256)
-	for buf.Scan() {
-		file = append(file, buf.Bytes()...)
-		file = append(file, byte('\n'))
-	}
-	osfile.Close()
-	return file, nil
 }
